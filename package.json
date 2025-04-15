@@ -1,0 +1,29 @@
+{
+    "name": "lnfi-mcp-node-service-test",
+    "version": "1.0.0-beta.7",
+    "description": "",
+    "main": "./build/index.js",
+    "type": "module",
+    "bin": {
+        "lnfi-mcp-node-service-test": "./build/index.js"
+    },
+    "scripts": {
+        "build": "tsc && chmod 755 build/index.js",
+        "start": "node build/index.js"
+    },
+    "files": [
+        "build"
+    ],
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.7.0",
+        "lnfi-sdk": "1.0.0-beta.10",
+        "zod": "^3.24.2"
+    },
+    "devDependencies": {
+        "@types/node": "^22.13.13",
+        "typescript": "^5.8.2"
+    }
+}
