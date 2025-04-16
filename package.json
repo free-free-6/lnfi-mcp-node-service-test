@@ -1,6 +1,6 @@
 {
     "name": "lnfi-mcp-node-service-test",
-    "version": "1.0.0-beta.9",
+    "version": "1.0.0-beta.15",
     "description": "",
     "main": "./build/index.js",
     "type": "module",
@@ -19,7 +19,7 @@
     "license": "ISC",
     "dependencies": {
         "@modelcontextprotocol/sdk": "^1.7.0",
-        "lnfi-sdk": "1.0.0-beta.10",
+        "lnfi-sdk": "1.0.0-beta.14",
         "zod": "^3.24.2"
     },
     "devDependencies": {

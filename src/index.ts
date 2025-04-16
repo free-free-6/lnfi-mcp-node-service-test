@@ -41,8 +41,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
 
     // Market tools
     server.tool(
-        "marketListOrder",
-        "List a new market order",
+        "LnfiMarketListOrder",
+        "Lnfi List a new market order",
         {
             side: z.string(),
             amount: z.number(),
@@ -63,8 +63,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "marketTakeOrder",
-        "Take an existing market order",
+        "LnfiMarketTakeOrder",
+        "Lnfi Take an existing market order",
         { orderId: z.string() },
         async ({ orderId }) => {
             const result = await lnfisdk.market.takeOrder(orderId);
@@ -73,8 +73,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "marketCancelOrder",
-        "Cancel a market order",
+        "LnfiMarketCancelOrder",
+        "Lnfi Cancel a market order",
         { orderId: z.string() },
         async ({ orderId }) => {
             const result = await lnfisdk.market.cancelOrder(orderId);
@@ -83,8 +83,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "marketRepairOrder",
-        "Repair a market order",
+        "LnfiMarketRepairOrder",
+        "Lnfi Repair a market order",
         { orderId: z.string() },
         async ({ orderId }) => {
             const result = await lnfisdk.market.repairOrder(orderId);
@@ -94,8 +94,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
 
     // Token tools
     server.tool(
-        "tokenApprove",
-        "Approve token spending",
+        "LnfiTokenApprove",
+        "Lnfi Approve token spending",
         {
             tokenName: z.string(),
             amount: z.number(),
@@ -112,8 +112,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "tokenTransfer",
-        "Transfer tokens",
+        "LnfiTokenTransfer",
+        "Lnfi Transfer tokens",
         {
             tokenName: z.string(),
             amount: z.number(),
@@ -130,8 +130,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "tokenAddAddressBook",
-        "Add address to address book",
+        "LnfiTokenAddAddressBook",
+        "Lnfi Add address to address book",
         {
             address: z.string(),
             name: z.string()
@@ -146,14 +146,16 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "tokenDeposit",
-        "Deposit tokens",
+        "LnfiTokenDeposit",
+        "Lnfi Deposit tokens",
         {
+            tokenName: z.string().describe("If provided as SATS, do not convert to BTC"),
             amount: z.number(),
-            to: z.string()
+            to: z.string().optional().describe("User address (optional, if not provided, pass empty)")
         },
-        async ({ amount, to }) => {
+        async ({ tokenName, amount, to }) => {
             const result = await lnfisdk.token.deposit({
+                tokenName,
                 amount,
                 to
             });
@@ -162,13 +164,15 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "tokenWithdraw",
-        "Withdraw tokens",
+        "LnfiTokenWithdraw",
+        "Lnfi Withdraw tokens",
         {
+            tokenName: z.string(),
             invoice: z.string()
         },
-        async ({ invoice }) => {
+        async ({ tokenName, invoice }) => {
             const result = await lnfisdk.token.withdraw({
+                tokenName,
                 invoice
             });
             return { content: [{ type: "text", text: JSON.stringify(result) }] };
@@ -177,8 +181,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
 
     // Asset tools
     server.tool(
-        "assetGetBalance",
-        "Get asset balance",
+        "LnfiAssetGetBalance",
+        "Lnfi Get asset balance",
         { user: z.string().optional().describe("User address (optional, defaults to query self)") },
         async ({ user }) => {
             const result = await lnfisdk.asset.getBalance(user);
@@ -187,8 +191,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "assetGetTokenList",
-        "Get token list",
+        "LnfiAssetGetTokenList",
+        "Lnfi Get token list",
         {},
         async () => {
             const result = await lnfisdk.asset.getTokenList();
@@ -197,8 +201,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "assetGetAllowance",
-        "Get token allowance",
+        "LnfiAssetGetAllowance",
+        "Lnfi Get token allowance",
         {
             token: z.string(),
             owner: z.string().optional(),
@@ -211,8 +215,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "assetGetFundingRecords",
-        "Get funding records",
+        "LnfiAssetGetFundingRecords",
+        "Lnfi Get funding records",
         {
             page: z.number().optional(),
             count: z.number().optional(),
@@ -228,8 +232,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "assetGetTokenEvents",
-        "Get token events",
+        "LnfiAssetGetTokenEvents",
+        "Lnfi Get token events",
         {
             type: z.string().optional(),
             token: z.string().optional(),
@@ -245,8 +249,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "assetGetHolders",
-        "Get token holders",
+        "LnfiAssetGetHolders",
+        "Lnfi Get token holders",
         {
             assetId: z.string(),
             owner: z.string().optional(),
@@ -260,8 +264,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "assetGetHolder",
-        "Get holder info",
+        "LnfiAssetGetHolder",
+        "Lnfi Get holder info",
         {
             assetId: z.string(),
             owner: z.string().optional()
@@ -273,8 +277,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "assetGetHolderSummary",
-        "Get holder summary",
+        "LnfiAssetGetHolderSummary",
+        "Lnfi Get holder summary",
         { assetId: z.string() },
         async ({ assetId }) => {
             const result = await lnfisdk.asset.getHolderSummary(assetId);
@@ -283,8 +287,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "assetGetPayeeList",
-        "Get payee list",
+        "LnfiAssetGetPayeeList",
+        "Lnfi Get payee list",
         {},
         async () => {
             const result = await lnfisdk.asset.getPayeeList();
@@ -295,8 +299,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
 
     // Market API tools
     server.tool(
-        "marketsGetTokenList",
-        "Get market token list",
+        "LnfiMarketsGetTokenList",
+        "Lnfi Get market token list",
         {},
         async () => {
             const result = await lnfisdk.marketApi.getMarketTokenList();
@@ -305,8 +309,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "marketsGetOrderListing",
-        "Get market order listing",
+        "LnfiMarketsGetOrderListing",
+        "Lnfi Get market order listing",
         {
             page: z.number().optional(),
             count: z.number().optional(),
@@ -320,8 +324,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "marketsGetOrderHistory",
-        "Get order history",
+        "LnfiMarketsGetOrderHistory",
+        "Lnfi Get order history",
         {
             count: z.number().optional(),
             page: z.number().optional(),
@@ -338,8 +342,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "marketsGetMyOrder",
-        "Get my market orders",
+        "LnfiMarketsGetMyOrder",
+        "Lnfi Get my market orders",
         {
             count: z.number().optional(),
             page: z.number().optional(),
@@ -355,8 +359,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     );
 
     server.tool(
-        "marketsGetKline",
-        "Get market Kline data",
+        "LnfiMarketsGetKline",
+        "Lnfi Get market Kline data",
         {
             tokenAddress: z.string(),
             startDataTime: z.string().optional(),
@@ -373,8 +377,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
 
     // Lock tools
     server.tool(
-        "lockGetLockList",
-        "Get lock list",
+        "LnfiLockGetLockList",
+        "Lnfi Get lock list",
         {
             page: z.number().optional(),
             count: z.number().optional(),
