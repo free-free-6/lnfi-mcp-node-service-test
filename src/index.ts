@@ -179,7 +179,7 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     server.tool(
         "assetGetBalance",
         "Get asset balance",
-        { user: z.string().optional() },
+        { user: z.string().optional().describe("User address (optional, defaults to query self)") },
         async ({ user }) => {
             const result = await lnfisdk.asset.getBalance(user);
             return { content: [{ type: "text", text: JSON.stringify(result) }] };
