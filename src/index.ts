@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
@@ -399,7 +401,11 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     return server;
 }
 
-getMcpLnfiServer({}).catch((error) => {
+getMcpLnfiServer({
+    env: "development",
+    relays: ["wss://dev-relay.lnfi.network"],
+    baseURL: "https://market-api.unift.xyz"
+}).catch((error) => {
     console.error("Fatal error in main():", error);
     process.exit(1);
 });
