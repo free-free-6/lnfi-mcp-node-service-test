@@ -41,10 +41,20 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
         },
     });
 
+    server.tool(
+        "LnfiGetConfig",
+        "Lnfi Get Config Environment",
+        {},
+        async ({ }) => {
+            const config = await lnfisdk.getConfig();
+            return { content: [{ type: "text", text: JSON.stringify(config) }] };
+        }
+    );
+
     // Market tools
     server.tool(
         "LnfiMarketListOrder",
-        "Lnfi List a new market order",
+        "Lnfi List a new market order. Need to call LnfiTokenApprove first to authorize amount*price SATS, get MARKET_ROBOT_ADDR from LnfiGetConfig",
         {
             side: z.string(),
             amount: z.number(),
@@ -349,8 +359,8 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
         {
             count: z.number().optional(),
             page: z.number().optional(),
-            type: z.string().optional(),
-            token: z.string().optional(),
+            type: z.string().optional().describe("buy or sell(optional, if not provided, pass empty)"),
+            token: z.string().optional().describe("token address(optional, if not provided, pass empty)"),
             status: z.string().optional(),
             owner: z.string().optional()
         },
