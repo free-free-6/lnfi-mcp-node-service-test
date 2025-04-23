@@ -7,6 +7,9 @@ import {
     createLnfiApi,
 } from "./lnfi_sdk.js";
 
+// @ts-ignore
+export { Singer } from "lnfi-sdk";
+
 export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     let privateKey;
     let lnfiApiEnvTemp = {};
