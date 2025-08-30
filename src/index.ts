@@ -57,7 +57,7 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     // Market tools
     server.tool(
         "LnfiMarketListOrder",
-        "Lnfi List a new market order. Need to call LnfiTokenApprove first to authorize amount*price SATS, get MARKET_ROBOT_ADDR from LnfiGetConfig",
+        "Lnfi List a new market order. Need to call LnfiTokenApprove first to authorize amount*price SATS, approveTo set to MARKET_ROBOT_ADDR",
         {
             side: z.string(),
             amount: z.number(),
@@ -79,7 +79,7 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
 
     server.tool(
         "LnfiMarketTakeOrder",
-        "Lnfi Take an existing market order",
+        "Lnfi takes an existing market order. First, call LnfiMarketsGetOrderListing to get the money value in SATS, then call LnfiTokenApprove to authorize with approveTo set to MARKET_ROBOT_ADDR.",
         { orderId: z.string() },
         async ({ orderId }) => {
             const result = await lnfisdk.market.takeOrder(orderId);
@@ -114,13 +114,23 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
         {
             tokenName: z.string(),
             amount: z.number(),
-            approveTo: z.string()
+            approveTo: z.string().describe("MARKET_ROBOT_ADDR or TOKEN_ROBOT_ADDR (fixed strings), or a nostrAddress (e.g. npub...)")
         },
         async ({ tokenName, amount, approveTo }) => {
+            let approveToTemp =  approveTo;
+            if (approveTo.toUpperCase() === "MARKET_ROBOT_ADDR") {
+                const config = await lnfisdk.getConfig();
+                approveToTemp = config.MARKET_ROBOT_ADDR;
+            }
+            if (approveTo.toUpperCase() === "TOKEN_ROBOT_ADDR") {
+                const config = await lnfisdk.getConfig();
+                approveToTemp = config.TOKEN_ROBOT_ADDR;
+            }
+
             const result = await lnfisdk.token.approve({
                 tokenName,
                 amount,
-                approveTo
+                approveTo: approveToTemp
             });
             return { content: [{ type: "text", text: JSON.stringify(result) }] };
         }
@@ -330,7 +340,7 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
             page: z.number().optional(),
             count: z.number().optional(),
             token: z.string().optional(),
-            type: z.string().optional()
+            type: z.string().optional().describe("Order type filter. If you want to buy, query SELL. If you want to sell, query BUY.")
         },
         async (params) => {
             const result = await lnfisdk.marketApi.getMarketOrderListing(params);
