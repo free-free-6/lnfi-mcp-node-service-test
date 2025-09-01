@@ -8,7 +8,7 @@ import {
 } from "./lnfi_sdk.js";
 
 // @ts-ignore
-export { Singer } from "lnfi-sdk";
+export { LnfiNostr } from "custom-nostr-sdk";
 
 export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     let privateKey;
@@ -57,7 +57,7 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     // Market tools
     server.tool(
         "LnfiMarketListOrder",
-        "Lnfi List a new market order. Need to call LnfiTokenApprove first to authorize amount*price SATS, approveTo set to MARKET_ROBOT_ADDR",
+        "Lnfi List a new listing market order. Need to call LnfiTokenApprove first to authorize amount*price SATS, approveTo set to MARKET_ROBOT_ADDR",
         {
             side: z.string(),
             amount: z.number(),
@@ -79,7 +79,7 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
 
     server.tool(
         "LnfiMarketTakeOrder",
-        "Lnfi takes an existing market order. First, call LnfiMarketsGetOrderListing to get the money value in SATS, then call LnfiTokenApprove to authorize with approveTo set to MARKET_ROBOT_ADDR.",
+        "Lnfi takes an filled existing market order. First, call LnfiMarketsGetOrderListing to get the money value in SATS, then call LnfiTokenApprove to authorize with approveTo set to MARKET_ROBOT_ADDR.",
         { orderId: z.string() },
         async ({ orderId }) => {
             const result = await lnfisdk.market.takeOrder(orderId);
@@ -110,7 +110,7 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     // Token tools
     server.tool(
         "LnfiTokenApprove",
-        "Lnfi Approve token spending",
+        "Lnfi Approve token spending. Before using this, first call LnfiAssetGetBalance to check the balance, and then call LnfiAssetGetAllowance to check the allowance.",
         {
             tokenName: z.string(),
             amount: z.number(),
@@ -190,7 +190,7 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
 
     server.tool(
         "LnfiTokenWithdraw",
-        "Lnfi Withdraw tokens",
+        "Lnfi Withdraw tokens. Before using this, first call LnfiTokenDecodeInvoice to get the amount. LnfiTokenApprove to authorize the amount. approveTo set to TOKEN_ROBOT_ADDR",
         {
             tokenName: z.string(),
             invoice: z.string()
@@ -200,6 +200,18 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
                 tokenName,
                 invoice
             });
+            return { content: [{ type: "text", text: JSON.stringify(result) }] };
+        }
+    );
+
+    server.tool(
+        "LnfiTokenDecodeInvoice",
+        "Lnfi Decode invoice to get the amount",
+        {
+            invoice: z.string()
+        },
+        async ({ invoice }) => {
+            const result = await lnfisdk.token.decodeInvoice(invoice);
             return { content: [{ type: "text", text: JSON.stringify(result) }] };
         }
     );
@@ -227,14 +239,25 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
 
     server.tool(
         "LnfiAssetGetAllowance",
-        "Lnfi Get token allowance",
+        "Lnfi Get token allowance. amountShow result in sats.",
         {
             token: z.string(),
-            owner: z.string().optional(),
-            spender: z.string()
+            owner: z.string().optional().describe("User address (optional, defaults empty to query self)"),
+            spender: z.string().describe("MARKET_ROBOT_ADDR or TOKEN_ROBOT_ADDR (fixed strings), or a nostrAddress (e.g. npub...)")
         },
         async ({ token, owner, spender }) => {
-            const result = await lnfisdk.asset.getAllowance(token, owner, spender);
+            let spenderTemp =  spender;
+            if (spender.toUpperCase() === "MARKET_ROBOT_ADDR") {
+                const config = await lnfisdk.getConfig();
+                spenderTemp = config.MARKET_ROBOT_ADDR;
+            }
+            if (spender.toUpperCase() === "TOKEN_ROBOT_ADDR") {
+                const config = await lnfisdk.getConfig();
+                spenderTemp = config.TOKEN_ROBOT_ADDR;
+            }
+
+
+            const result = await lnfisdk.asset.getAllowance(token, owner, spenderTemp);
             return { content: [{ type: "text", text: JSON.stringify(result) }] };
         }
     );
@@ -338,7 +361,7 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
         "Lnfi Get market order listing",
         {
             page: z.number().optional(),
-            count: z.number().optional(),
+            count: z.number().optional().describe("The number of results to return. Default is 10 if not provided"),
             token: z.string().optional(),
             type: z.string().optional().describe("Order type filter. If you want to buy, query SELL. If you want to sell, query BUY.")
         },
