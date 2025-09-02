@@ -4,39 +4,15 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import {
-    createLnfiApi,
+    createLnfiSdk,
 } from "./lnfi_sdk.js";
 
-// @ts-ignore
-export { LnfiNostr } from "custom-nostr-sdk";
 
-export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
-    let privateKey;
-    let lnfiApiEnvTemp = {};
-    //Check if running in browser
-    if (typeof window === "undefined") {
-        privateKey = process.argv[2];
-        if (!privateKey) {
-            console.error("Please provide private key as startup parameter");
-            process.exit(1);
-        }
-
-        lnfiApiEnvTemp = {
-            ...lnfiApiEnv,
-            privateKey
-        }
-
-    } else {
-        lnfiApiEnvTemp = {
-            ...lnfiApiEnv
-        }
-    }
-
-
-    const lnfisdk = createLnfiApi(lnfiApiEnvTemp);
+export const getLnfiMcpServer = async (lnfiSdkEnv: any) => {
+    const lnfisdk = createLnfiSdk(lnfiSdkEnv);
 
     const server = new McpServer({
-        name: "lnfi-mcp-node-service",
+        name: "lnfi-mcp-service",
         version: "1.0.0",
         capabilities: {
             resources: {},
@@ -113,7 +89,7 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     // Token tools
     server.tool(
         "LnfiTokenApprove",
-        "Lnfi Approve token spending. Before using this, first call LnfiAssetGetBalance to check the balance, and then call LnfiAssetGetAllowance to check the allowance.",
+        "Lnfi Approve token spending. Before using this, first call LnfiTokenApiGetBalance to check the balance, and then call LnfiTokenApiGetAllowance to check the allowance.",
         {
             tokenName: z.string().describe("Always SATS when buying; for selling use the actual tokenName"),
             amount: z.number(),
@@ -221,27 +197,27 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
 
     // Asset tools
     server.tool(
-        "LnfiAssetGetBalance",
+        "LnfiTokenApiGetBalance",
         "Lnfi Get asset balance",
         { user: z.string().optional().describe("User address (optional, defaults to query self)") },
         async ({ user }) => {
-            const result = await lnfisdk.asset.getBalance(user);
+            const result = await lnfisdk.tokenApi.getBalance(user);
             return { content: [{ type: "text", text: JSON.stringify(result) }] };
         }
     );
 
     server.tool(
-        "LnfiAssetGetTokenList",
+        "LnfiTokenApiGetTokenList",
         "Lnfi Get token list",
         {},
         async () => {
-            const result = await lnfisdk.asset.getTokenList();
+            const result = await lnfisdk.tokenApi.getTokenList();
             return { content: [{ type: "text", text: JSON.stringify(result) }] };
         }
     );
 
     server.tool(
-        "LnfiAssetGetAllowance",
+        "LnfiTokenApiGetAllowance",
         "Lnfi Get token allowance. amountShow result in sats.",
         {
             token: z.string(),
@@ -260,13 +236,13 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
             }
 
 
-            const result = await lnfisdk.asset.getAllowance(token, owner, spenderTemp);
+            const result = await lnfisdk.tokenApi.getAllowance(token, owner, spenderTemp);
             return { content: [{ type: "text", text: JSON.stringify(result) }] };
         }
     );
 
     server.tool(
-        "LnfiAssetGetFundingRecords",
+        "LnfiTokenApiGetFundingRecords",
         "Lnfi Get funding records",
         {
             page: z.number().optional(),
@@ -277,13 +253,13 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
             status: z.string().optional()
         },
         async (params) => {
-            const result = await lnfisdk.asset.getFundingRecords(params);
+            const result = await lnfisdk.tokenApi.getFundingRecords(params);
             return { content: [{ type: "text", text: JSON.stringify(result) }] };
         }
     );
 
     server.tool(
-        "LnfiAssetGetTokenEvents",
+        "LnfiTokenApiGetTokenEvents",
         "Lnfi Get token events",
         {
             type: z.string().optional(),
@@ -294,13 +270,13 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
             count: z.number().optional()
         },
         async (params) => {
-            const result = await lnfisdk.asset.getTokenEvents(params);
+            const result = await lnfisdk.tokenApi.getTokenEvents(params);
             return { content: [{ type: "text", text: JSON.stringify(result) }] };
         }
     );
 
     server.tool(
-        "LnfiAssetGetHolders",
+        "LnfiTokenApiGetHolders",
         "Lnfi Get token holders",
         {
             assetId: z.string(),
@@ -309,40 +285,40 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
             count: z.number().optional()
         },
         async (params) => {
-            const result = await lnfisdk.asset.getHolders(params);
+            const result = await lnfisdk.tokenApi.getHolders(params);
             return { content: [{ type: "text", text: JSON.stringify(result) }] };
         }
     );
 
     server.tool(
-        "LnfiAssetGetHolder",
+        "LnfiTokenApiGetHolder",
         "Lnfi Get holder info",
         {
             assetId: z.string(),
             owner: z.string().optional()
         },
         async ({ assetId, owner }) => {
-            const result = await lnfisdk.asset.getHolder(assetId, owner);
+            const result = await lnfisdk.tokenApi.getHolder(assetId, owner);
             return { content: [{ type: "text", text: JSON.stringify(result) }] };
         }
     );
 
     server.tool(
-        "LnfiAssetGetHolderSummary",
+        "LnfiTokenApiGetHolderSummary",
         "Lnfi Get holder summary",
         { assetId: z.string() },
         async ({ assetId }) => {
-            const result = await lnfisdk.asset.getHolderSummary(assetId);
+            const result = await lnfisdk.tokenApi.getHolderSummary(assetId);
             return { content: [{ type: "text", text: JSON.stringify(result) }] };
         }
     );
 
     server.tool(
-        "LnfiAssetGetPayeeList",
+        "LnfiTokenApiGetPayeeList",
         "Lnfi Get payee list",
         {},
         async () => {
-            const result = await lnfisdk.asset.getPayeeList();
+            const result = await lnfisdk.tokenApi.getPayeeList();
             return { content: [{ type: "text", text: JSON.stringify(result) }] };
         }
     );
@@ -450,12 +426,25 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     return server;
 }
 
-getMcpLnfiServer({
-    env: "development",
-    relays: ["wss://dev-relay.lnfi.network"],
-    baseURL: "https://market-api.unift.xyz"
-}).catch((error) => {
-    console.error("Fatal error in main():", error);
-    process.exit(1);
-});
 
+
+
+
+async function main() {
+    let privateKey = process.env.LNFI_PRIVATE_KEY;
+    let env = process.env.LNFI_ENV;
+    let relay = process.env.LNFI_RELAY;
+    let baseURL = process.env.LNFI_BASE_URL;
+    if (!privateKey) {
+        console.error("Please provide private key as environment variable");
+        process.exit(1);
+    }
+
+    const server = await getLnfiMcpServer({privateKey, env, relay, baseURL}).catch((error) => {
+        console.error("Fatal error in main():", error);
+        process.exit(1);
+    });
+    return server;
+}
+
+main();

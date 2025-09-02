@@ -1,14 +1,14 @@
 // @ts-ignore
-import { LnfiSdk, LnfiNostr} from "custom-nostr-sdk";
+import { LnfiSdk, LnfiNostr} from "@lnfi-network/lnfi-sdk";
 
-export function createLnfiApi(lnfiApiEnv: any) {
-    const signer = lnfiApiEnv?.privateKey ? new LnfiNostr({
-        privateKey: lnfiApiEnv?.privateKey,
+export function createLnfiSdk(lnfiSdkEnv: any) {
+    const signer = lnfiSdkEnv?.privateKey ? new LnfiNostr({
+        privateKey: lnfiSdkEnv?.privateKey,
     }) : undefined;
 
     const lnfisdk = new LnfiSdk({
-        ...lnfiApiEnv,
-        signer: lnfiApiEnv?.privateKey ? signer : lnfiApiEnv?.signer,
+        ...lnfiSdkEnv,
+        signer: lnfiSdkEnv?.privateKey ? signer : lnfiSdkEnv?.signer,
     });
 
     return lnfisdk;

@@ -45,9 +45,14 @@ xxxxxxxxxxxxxxxxxxxx
             "command": "npx",
             "args": [
                 "-y",
-                "lnfi-mcp-node-service-test",
-                "xxxxxxxxxxxxxxxxxxxx"
-            ]
+                "lnfi-mcp-node-service-test"
+            ],
+            "env": {
+                "LNFI_PRIVATE_KEY": "xxxxxxxxxxxxxxxxxxxx", // Required: Nostr private key
+                "LNFI_ENV": "production",   // Optional: 'development' | 'production'
+                "LNFI_RELAY": "wss://relay01.lnfi.network", // Optional: single relay URL or array of relays
+                "LNFI_BASE_URL": "https://market-api.lnfi.network" // Optional: API base URL
+            }
         }
     }
 }
@@ -55,6 +60,6 @@ xxxxxxxxxxxxxxxxxxxx
 
 ## Dependencies
 
-- [lnfi-sdk](https://www.npmjs.com/package/lnfi-sdk) - LnFi API client
+- [@lnfi-network/lnfi-sdk](https://www.npmjs.com/package/@lnfi-network/lnfi-sdk) - LnFi API client
 - [zod](https://www.npmjs.com/package/zod) - TypeScript-first schema validation
 - [@modelcontextprotocol/sdk](https://www.npmjs.com/package/@modelcontextprotocol/sdk) - Model Context Protocol SDK
