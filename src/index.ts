@@ -63,9 +63,12 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
             amount: z.number(),
             price: z.string(),
             buyOrSellTokenName: z.string(),
-            payTokenName: z.string()
+            payTokenName: z.string().describe("Must always be SATS")
         },
         async ({ side, amount, price, buyOrSellTokenName, payTokenName }) => {
+            if(payTokenName !== "SATS") {
+                payTokenName = "SATS";
+            }
             const result = await lnfisdk.market.listOrder({
                 side,
                 amount,
@@ -79,7 +82,7 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
 
     server.tool(
         "LnfiMarketTakeOrder",
-        "Lnfi takes an filled existing market order. First, call LnfiMarketsGetOrderListing to get the money value in SATS, then call LnfiTokenApprove to authorize with approveTo set to MARKET_ROBOT_ADDR.",
+        "Lnfi takes an existing market order. STEPS: 1) Call LnfiMarketsGetOrderListing to find orders and get price details. 2) Call LnfiTokenApprove with these rules: - If you want to BUY a token (taking a SELL order): authorize tokenName='SATS', amount=price*quantity in SATS, approveTo='MARKET_ROBOT_ADDR' - If you want to SELL a token (taking a BUY order): authorize tokenName=the actual token name you're selling, amount=quantity, approveTo='MARKET_ROBOT_ADDR'. 3) Call this function with orderId.",
         { orderId: z.string() },
         async ({ orderId }) => {
             const result = await lnfisdk.market.takeOrder(orderId);
@@ -112,7 +115,7 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
         "LnfiTokenApprove",
         "Lnfi Approve token spending. Before using this, first call LnfiAssetGetBalance to check the balance, and then call LnfiAssetGetAllowance to check the allowance.",
         {
-            tokenName: z.string(),
+            tokenName: z.string().describe("Always SATS when buying; for selling use the actual tokenName"),
             amount: z.number(),
             approveTo: z.string().describe("MARKET_ROBOT_ADDR or TOKEN_ROBOT_ADDR (fixed strings), or a nostrAddress (e.g. npub...)")
         },
@@ -172,7 +175,7 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
 
     server.tool(
         "LnfiTokenDeposit",
-        "Lnfi Deposit tokens",
+        "Lnfi Deposit tokens. Will generate an invoice address, which can be used to deposit tokens.",
         {
             tokenName: z.string().describe("If provided as SATS, do not convert to BTC"),
             amount: z.number(),
@@ -348,7 +351,7 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
     // Market API tools
     server.tool(
         "LnfiMarketsGetTokenList",
-        "Lnfi Get market token list",
+        "Lnfi Get market token list (including the latest deal price in the `dealPrice` field)",
         {},
         async () => {
             const result = await lnfisdk.marketApi.getMarketTokenList();
@@ -360,9 +363,9 @@ export const getMcpLnfiServer = async (lnfiApiEnv: any) => {
         "LnfiMarketsGetOrderListing",
         "Lnfi Get market order listing",
         {
-            page: z.number().optional(),
+            page: z.number().optional().describe("Page number, starting from 1"),
             count: z.number().optional().describe("The number of results to return. Default is 10 if not provided"),
-            token: z.string().optional(),
+            token: z.string().optional().describe("TokenName(optional, if not provided, pass empty)"),
             type: z.string().optional().describe("Order type filter. If you want to buy, query SELL. If you want to sell, query BUY.")
         },
         async (params) => {
